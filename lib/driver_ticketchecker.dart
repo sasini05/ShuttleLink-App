@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'driver_seatmanagement.dart';
 
 
 class TicketCheckerScreen extends StatelessWidget {
@@ -108,10 +109,10 @@ class TicketCheckerScreen extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    /*Navigator.push(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => DriverSeatManagementScreen(rideId: ride['rideId'], routeDisplay: ride['route'] ?? "Unknown")),
-                    );*/
+                    );
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF42C79A), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                   child: const Text("View Seats", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
