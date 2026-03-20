@@ -46,6 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '889957862081',
     projectId: 'shuttlelink-app-c593c',
     authDomain: 'shuttlelink-app-c593c.firebaseapp.com',
+    databaseURL: 'https://shuttlelink-app-c593c-default-rtdb.firebaseio.com',
     storageBucket: 'shuttlelink-app-c593c.firebasestorage.app',
   );
 
@@ -54,6 +55,7 @@ class DefaultFirebaseOptions {
     appId: '1:889957862081:android:0adc5d0a337c7cd0102240',
     messagingSenderId: '889957862081',
     projectId: 'shuttlelink-app-c593c',
+    databaseURL: 'https://shuttlelink-app-c593c-default-rtdb.firebaseio.com',
     storageBucket: 'shuttlelink-app-c593c.firebasestorage.app',
   );
 
@@ -62,6 +64,7 @@ class DefaultFirebaseOptions {
     appId: '1:889957862081:ios:3b8aac160d935aeb102240',
     messagingSenderId: '889957862081',
     projectId: 'shuttlelink-app-c593c',
+    databaseURL: 'https://shuttlelink-app-c593c-default-rtdb.firebaseio.com',
     storageBucket: 'shuttlelink-app-c593c.firebasestorage.app',
     iosBundleId: 'com.example.shuttlelinkapp.shuttleLinkApp',
   );
@@ -71,6 +74,7 @@ class DefaultFirebaseOptions {
     appId: '1:889957862081:ios:3b8aac160d935aeb102240',
     messagingSenderId: '889957862081',
     projectId: 'shuttlelink-app-c593c',
+    databaseURL: 'https://shuttlelink-app-c593c-default-rtdb.firebaseio.com',
     storageBucket: 'shuttlelink-app-c593c.firebasestorage.app',
     iosBundleId: 'com.example.shuttlelinkapp.shuttleLinkApp',
   );
@@ -81,6 +85,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '889957862081',
     projectId: 'shuttlelink-app-c593c',
     authDomain: 'shuttlelink-app-c593c.firebaseapp.com',
+    databaseURL: 'https://shuttlelink-app-c593c-default-rtdb.firebaseio.com',
     storageBucket: 'shuttlelink-app-c593c.firebasestorage.app',
   );
 }

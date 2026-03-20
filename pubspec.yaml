@@ -37,6 +37,7 @@ dependencies:
   firebase_core: ^4.5.0
   firebase_auth: ^6.2.0
   firebase_database: ^12.1.4
+  intl: 0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -53,12 +54,12 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
-flutter:
+# flutter:
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
-  uses-material-design: true
+  # uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -90,3 +91,19 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/bus_logo.png
+    - assets/dashboard_bus_logo.png
+    - assets/wheel.png
+    - assets/income.jpg
+    - assets/lost&found.png
+    - assets/alert.png
+    - assets/bus_reg.png
+    - assets/typeA.png
+    - assets/typeB.png
+    - assets/feedback_icon.png
+    - assets/galle.png
+    - assets/gampaha.png
+    - assets/kandy.png

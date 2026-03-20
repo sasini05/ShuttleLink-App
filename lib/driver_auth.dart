@@ -258,7 +258,7 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
                               value: _selectedRoute,
                               isExpanded: true,
                               dropdownColor: const Color(0xFF9E9E9E),
-                              items: <String>['Kandy-NSBM', 'Colombo-NSBM', 'Galle-NSBM'].map((String value) {
+                              items: <String>['Kandy-NSBM', 'Gampaha-NSBM', 'Galle-NSBM'].map((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
                                   child: Text(value, style: const TextStyle(color: Colors.white)),

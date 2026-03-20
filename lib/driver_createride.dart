@@ -111,7 +111,12 @@ class _CreateRideScreenState extends State<CreateRideScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Ride created successfully!"), backgroundColor: Color(0xFF42C79A)),
         );
-        Navigator.pop(context);
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          // Optional: If they can't pop, explicitly send them back to the Dashboard
+          // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DriverDashboard()));
+        }
       }
     } catch (e) {
       _showError("Failed to create ride: $e");
