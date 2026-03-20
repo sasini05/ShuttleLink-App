@@ -4,6 +4,7 @@ import 'package:shuttle_link_app/driver_auth.dart';
 import 'firebase_options.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:firebase_database/firebase_database.dart';
+import 'pass_welcome_screen.dart';
 
 void main() async {
   // Ensure Flutter is fully loaded before initializing Firebase
@@ -112,13 +113,13 @@ class RoleSelectionScreen extends StatelessWidget {
                     Expanded(
                       child: TextButton(
                         onPressed: () {
-                          /* THIS IS THE FIX! It now goes to the new Image 4 screen!
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => const PassengerWelcomeScreen(),
                             ),
-                          );*/
+                          );
                         },
                         child: const Text(
                           'PASSENGER',
