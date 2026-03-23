@@ -5,7 +5,6 @@ import 'pass_help_screen.dart';
 import 'pass_dashboard.dart';
 import 'main.dart';
 
-
 class PassengerSettingsScreen extends StatefulWidget {
   const PassengerSettingsScreen({super.key});
 
@@ -91,10 +90,15 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
         ),
         borderRadius: BorderRadius.only(bottomLeft: Radius.circular(25), bottomRight: Radius.circular(25)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          SizedBox(width: 10),
-          Text('Settings', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+          // Added the back arrow to route to the Dashboard
+          GestureDetector(
+            onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PassengerDashboard())),
+            child: const Icon(Icons.arrow_back, color: Color(0xFF42C79A), size: 28),
+          ),
+          const SizedBox(width: 15),
+          const Text('Settings', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -133,14 +137,12 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
     );
   }
 
-  // UPDATED SECURE LOGOUT LOGIC
   Future<void> _handleLogout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
 
       if (!context.mounted) return;
 
-      // FIX: Now routes all the way back to the GetStartedScreen!
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const GetStartedScreen()),

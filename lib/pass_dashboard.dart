@@ -142,22 +142,16 @@ class _PassengerDashboardState extends State<PassengerDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row (Logo + Notification Bell)
+          // Header Row (Logo centered, top right bell removed)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(width: 40), // Balances the bell icon to keep logo centered
+                const SizedBox(width: 40), // Left spacer
                 Image.asset('assets/dashboard_bus_logo.png', height: 60),
-                Container(
-                  decoration: const BoxDecoration(color: Colors.black26, shape: BoxShape.circle),
-                  child: IconButton(
-                    icon: const Icon(Icons.notifications, color: Colors.white),
-                    onPressed: () {},
-                  ),
-                ),
+                const SizedBox(width: 40), // Right spacer to keep the logo perfectly centered!
               ],
             ),
           ),

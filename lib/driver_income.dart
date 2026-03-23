@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 
-
 class IncomeScreen extends StatefulWidget {
   const IncomeScreen({super.key});
 
@@ -29,11 +28,9 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
   Future<void> _initializeData() async {
     await _fetchDriverBusData();
-    if (_driverBusNumber != null) {
-      await _calculateIncome();
-    } else {
-      setState(() => _isLoading = false);
-    }
+    // We run calculate income even if bus number isn't found,
+    // because we will now query by the Driver's UID instead!
+    await _calculateIncome();
   }
 
   // 1. Fetch which bus this driver owns, and the ticket price
@@ -47,7 +44,6 @@ class _IncomeScreenState extends State<IncomeScreen> {
         final data = snapshot.value as Map;
         setState(() {
           _driverBusNumber = data['busNumber']?.toString();
-          // If you save a ticketPrice during bus registration, it uses that. Otherwise defaults to 500.
           if (data['ticketPrice'] != null) {
             _ticketPrice = double.tryParse(data['ticketPrice'].toString()) ?? 500.0;
           }
@@ -58,46 +54,52 @@ class _IncomeScreenState extends State<IncomeScreen> {
     }
   }
 
-  // 2. Calculate the Daily and Monthly Income
+  // 2. Calculate the Daily and Monthly Income ( FIXED TO READ FROM 'RIDES' NODE)
   Future<void> _calculateIncome() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     setState(() => _isLoading = true);
 
-    // Format the selected date to match Firebase (e.g., "2026-03-20")
     String selectedDateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    // Format the month to match Firebase (e.g., "2026-03")
     String selectedMonthStr = DateFormat('yyyy-MM').format(_selectedDate);
 
     double tempDaily = 0.0;
     double tempMonthly = 0.0;
 
     try {
-      // Look at all bookings for this driver's bus
+      //  FIX: Look at the Rides node, filtered by this specific Driver's ID!
       final snapshot = await FirebaseDatabase.instance.ref()
-          .child('Bookings')
-          .orderByChild('busNumber')
-          .equalTo(_driverBusNumber)
+          .child('Rides')
+          .orderByChild('driverId')
+          .equalTo(user.uid)
           .get();
 
       if (snapshot.exists) {
         final map = snapshot.value as Map<dynamic, dynamic>;
 
         map.forEach((key, value) {
+          // Exclude cancelled rides so drivers don't see projected income for trips that didn't happen
+          String status = (value['status'] ?? '').toString().toLowerCase();
+          if (status == 'cancelled' || status == 'canceled') return;
+
           final bookingDate = value['date']?.toString() ?? '';
 
-          // Determine how many seats were booked (default to 1 if not specified)
-          int seatCount = 1;
-          if (value['seatCount'] != null) {
-            seatCount = int.tryParse(value['seatCount'].toString()) ?? 1;
+          // FIX: Count how many seats are actually booked in the seatsStatus_map!
+          int seatCount = 0;
+          if (value['seatsStatus_map'] != null) {
+            final seats = value['seatsStatus_map'] as Map;
+            seatCount = seats.length;
           }
 
           final bookingTotal = seatCount * _ticketPrice;
 
-          // If the booking date perfectly matches today's selected date
+          // Add to Daily Income if the date perfectly matches
           if (bookingDate == selectedDateStr) {
             tempDaily += bookingTotal;
           }
 
-          // If the booking date starts with the current month (e.g., "2026-03")
+          // Add to Monthly Income if the date starts with the current month (e.g., "2026-03")
           if (bookingDate.startsWith(selectedMonthStr)) {
             tempMonthly += bookingTotal;
           }
@@ -128,7 +130,6 @@ class _IncomeScreenState extends State<IncomeScreen> {
       setState(() {
         _selectedDate = picked;
       });
-      // Recalculate based on the new date!
       _calculateIncome();
     }
   }
@@ -227,7 +228,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
                       const SizedBox(height: 20),
 
-                      // --- MONTHLY INCOME CARD (New Feature) ---
+                      // --- MONTHLY INCOME CARD ---
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),

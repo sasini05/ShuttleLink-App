@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
+import 'pass_dashboard.dart';
 
 class PassengerTicketScreen extends StatelessWidget {
   const PassengerTicketScreen({super.key});
@@ -12,125 +13,133 @@ class PassengerTicketScreen extends StatelessWidget {
     final DatabaseReference ridesRef = FirebaseDatabase.instance.ref().child('Rides');
 
     return Scaffold(
-      backgroundColor: const Color(0xFF14453D),
+      backgroundColor: const Color(0xFF161B1B), // Unified dark theme background
       body: SafeArea(
         bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            const Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text("My Tickets", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-            ),
+            // Standardized Gradient Header
+            _buildHeader(context),
 
-            // Main Container
+            // Main List Area
             Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF202124),
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
-                ),
-                child: StreamBuilder(
-                  stream: ridesRef.onValue,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: Color(0xFF43C59E)));
-                    }
-                    if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
-                      return const Center(child: Text("You have no booked tickets.", style: TextStyle(color: Colors.white70)));
-                    }
+              child: StreamBuilder(
+                stream: ridesRef.onValue,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: Color(0xFF43C59E)));
+                  }
+                  if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+                    return const Center(child: Text("You have no booked tickets.", style: TextStyle(color: Colors.white70)));
+                  }
 
-                    final ridesMap = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
-                    List<Map<String, dynamic>> myTickets = [];
-                    DateTime now = DateTime.now();
+                  final ridesMap = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+                  List<Map<String, dynamic>> myTickets = [];
+                  DateTime now = DateTime.now();
 
-                    // Loop through all rides to find this user's seats
-                    ridesMap.forEach((rideId, rideData) {
-                      if (rideData['seatsStatus_map'] != null) {
-                        Map<dynamic, dynamic> seats = rideData['seatsStatus_map'];
+                  // Loop through all rides to find this user's seats
+                  ridesMap.forEach((rideId, rideData) {
+                    if (rideData['seatsStatus_map'] != null) {
+                      Map<dynamic, dynamic> seats = rideData['seatsStatus_map'];
 
-                        seats.forEach((seatNum, assignedUid) {
-                          // If this seat belongs to the logged-in user
-                          if (assignedUid.toString() == myUid) {
-                            String dateStr = (rideData['date'] ?? "").toString();
-                            DateTime? rideDate;
+                      seats.forEach((seatNum, assignedUid) {
+                        if (assignedUid.toString() == myUid) {
+                          String dateStr = (rideData['date'] ?? "").toString();
+                          DateTime? rideDate;
 
-                            // Safely parse the date
+                          try {
+                            rideDate = DateFormat('yyyy-MM-dd').parse(dateStr);
+                          } catch (e) {
                             try {
-                              rideDate = DateFormat('yyyy-MM-dd').parse(dateStr);
+                              rideDate = DateFormat('dd/MM/yyyy').parse(dateStr);
                             } catch (e) {
-                              try {
-                                rideDate = DateFormat('dd/MM/yyyy').parse(dateStr);
-                              } catch (e) {
-                                rideDate = now; // Fallback
-                              }
-                            }
-
-                            // Only keep tickets that are LESS than 7 days old
-                            if (now.difference(rideDate).inDays <= 7) {
-
-                              // FIX: Check the master ride status for cancellations!
-                              String masterStatus = (rideData['status'] ?? "").toString().toLowerCase();
-                              bool isCancelled = masterStatus == 'cancelled' || masterStatus == 'canceled';
-
-                              bool isConfirmed = false;
-                              if (rideData['confirmed_seats'] != null) {
-                                isConfirmed = (rideData['confirmed_seats'] as Map).containsKey(seatNum);
-                              }
-
-                              // Determine display text and colors based on status priority
-                              String displayStatus = "Booked";
-                              Color displayColor = const Color(0xFF43C59E); // Default Mint Green
-
-                              if (isCancelled) {
-                                displayStatus = "Cancelled";
-                                displayColor = Colors.redAccent; // Red for cancelled
-                              } else if (isConfirmed) {
-                                displayStatus = "Confirmed";
-                                displayColor = Colors.blueAccent; // Blue for successfully boarded
-                              }
-
-                              myTickets.add({
-                                'seat': seatNum,
-                                'route': rideData['route'] ?? rideData['routeName'] ?? "Unknown",
-                                'date': dateStr,
-                                'time': rideData['time'] ?? rideData['startTime'] ?? "TBD",
-                                'bus': rideData['busNumber'] ?? "Unknown",
-                                'status': displayStatus,
-                                'statusColor': displayColor,
-                                'sortDate': rideDate,
-                              });
+                              rideDate = now;
                             }
                           }
-                        });
-                      }
-                    });
 
-                    // Sort tickets so the newest ones are at the top!
-                    myTickets.sort((a, b) => b['sortDate'].compareTo(a['sortDate']));
+                          if (now.difference(rideDate).inDays <= 7) {
+                            String masterStatus = (rideData['status'] ?? "").toString().toLowerCase();
+                            bool isCancelled = masterStatus == 'cancelled' || masterStatus == 'canceled';
 
-                    if (myTickets.isEmpty) {
-                      return const Center(
-                        child: Text("No active tickets found in the last 7 days.", style: TextStyle(color: Colors.white70)),
-                      );
+                            bool isConfirmed = false;
+                            if (rideData['confirmed_seats'] != null) {
+                              isConfirmed = (rideData['confirmed_seats'] as Map).containsKey(seatNum);
+                            }
+
+                            String displayStatus = "Booked";
+                            Color displayColor = const Color(0xFF43C59E);
+
+                            if (isCancelled) {
+                              displayStatus = "Cancelled";
+                              displayColor = Colors.redAccent;
+                            } else if (isConfirmed) {
+                              displayStatus = "Confirmed";
+                              displayColor = Colors.blueAccent;
+                            }
+
+                            myTickets.add({
+                              'seat': seatNum,
+                              'route': rideData['route'] ?? rideData['routeName'] ?? "Unknown",
+                              'date': dateStr,
+                              'time': rideData['time'] ?? rideData['startTime'] ?? "TBD",
+                              'bus': rideData['busNumber'] ?? "Unknown",
+                              'status': displayStatus,
+                              'statusColor': displayColor,
+                              'sortDate': rideDate,
+                            });
+                          }
+                        }
+                      });
                     }
+                  });
 
-                    return ListView.builder(
-                      padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 120), // Padding for Nav Bar
-                      itemCount: myTickets.length,
-                      itemBuilder: (context, index) {
-                        final ticket = myTickets[index];
-                        return _buildTicketCard(ticket);
-                      },
+                  myTickets.sort((a, b) => b['sortDate'].compareTo(a['sortDate']));
+
+                  if (myTickets.isEmpty) {
+                    return const Center(
+                      child: Text("No active tickets found in the last 7 days.", style: TextStyle(color: Colors.white70)),
                     );
-                  },
-                ),
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 120),
+                    itemCount: myTickets.length,
+                    itemBuilder: (context, index) {
+                      final ticket = myTickets[index];
+                      return _buildTicketCard(ticket);
+                    },
+                  );
+                },
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0D4B3E), Colors.black26],
+        ),
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(25), bottomRight: Radius.circular(25)),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PassengerDashboard())),
+            child: const Icon(Icons.arrow_back, color: Color(0xFF42C79A), size: 28),
+          ),
+          const SizedBox(width: 15),
+          const Text('My Tickets', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }
@@ -143,7 +152,6 @@ class PassengerTicketScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20.0),
         child: Row(
           children: [
-            // Seat Number Circle
             Container(
               width: 60, height: 60,
               decoration: const BoxDecoration(color: Color(0xFF0D4B3E), shape: BoxShape.circle),
@@ -151,8 +159,6 @@ class PassengerTicketScreen extends StatelessWidget {
               child: Text(ticket['seat'], style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(width: 20),
-
-            // Ticket Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,12 +169,10 @@ class PassengerTicketScreen extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text("Bus: ${ticket['bus']}", style: const TextStyle(color: Colors.white70, fontSize: 13)),
                   const SizedBox(height: 8),
-
-                  // Status Badge
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: ticket['statusColor'].withOpacity(0.2), // Uses withOpacity for better cross-version support
+                      color: ticket['statusColor'].withOpacity(0.2),
                       borderRadius: BorderRadius.circular(5),
                       border: Border.all(color: ticket['statusColor']),
                     ),
