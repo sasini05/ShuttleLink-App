@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'driver_dashboard.dart';
 
 class LostFoundScreen extends StatefulWidget {
   const LostFoundScreen({super.key});
@@ -40,20 +41,17 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
         });
       }
 
-      // Step B: Fetch Driver Profile Data (Using YOUR exact database keys!)
+      // Step B: Fetch Driver Profile Data
       final userSnapshot = await FirebaseDatabase.instance.ref().child('Users').child(user.uid).get();
       if (userSnapshot.exists && mounted) {
         final userData = userSnapshot.value as Map;
         setState(() {
-          // Changed to 'fullName'
           if (userData['fullName'] != null) {
             _nameController.text = userData['fullName'].toString();
           }
-          // Changed to 'contact'
           if (userData['contact'] != null) {
             _phoneController.text = userData['contact'].toString();
           }
-          // Added 'route' since it's saved in your User profile!
           if (userData['route'] != null) {
             _routeController.text = userData['route'].toString();
           }
@@ -69,7 +67,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 30)), // Can report items from up to a month ago
+      firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now(),
     );
     if (picked != null && picked != _selectedDate) {
@@ -87,14 +85,16 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
     try {
       final dateStr = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
 
+      // 🔴 FIX: Using exact keys matched to Passenger app models!
       await FirebaseDatabase.instance.ref().child('LostAndFound').push().set({
         'itemName': _itemController.text.trim(),
         'route': _routeController.text.trim(),
         'date': dateStr,
-        'busNumber': _driverBusNumber ?? "Unknown",
-        'reporterName': _nameController.text.trim(),
+        'busNo': _driverBusNumber ?? "Unknown",
+        'contactName': _nameController.text.trim(),
         'contactNumber': _phoneController.text.trim(),
         'reportedBy': 'Driver',
+        'itemType': 'found',
         'timestamp': ServerValue.timestamp,
       });
 
@@ -112,6 +112,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
         const SnackBar(content: Text("Item reported successfully!"), backgroundColor: Color(0xFF42C79A)),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
     }
   }
@@ -125,7 +126,13 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
+          // FIX: Added "+ 100" to the bottom padding to clear the navigation bar!
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 100,
+              left: 24,
+              right: 24,
+              top: 24
+          ),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -177,7 +184,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                     child: const Text('Submit Item', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 10), // Small padding underneath the button
               ],
             ),
           ),
@@ -185,7 +192,6 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
       },
     );
   }
-
   Widget _buildTextField(String hint, TextEditingController controller, {bool isNumber = false}) {
     return TextField(
       controller: controller,
@@ -204,13 +210,13 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D4B3E),
+      backgroundColor: const Color(0xFF0D4B3E), // Original Background Color
       body: SafeArea(
         bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Original Header
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -220,7 +226,8 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                     decoration: const BoxDecoration(color: Color(0xFF42C79A), shape: BoxShape.circle),
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                      // Safely route back to Driver Dashboard!
+                      onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const DriverDashboard())),
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -234,12 +241,12 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF161B1B),
+                  color: Color(0xFF161B1B), // Original dark container
                   borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
                 ),
                 child: Column(
                   children: [
-                    // TOP SECTION: Driver's Add Button
+                    // TOP SECTION: Driver's Add Button (Kept in its original position)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
                       child: ElevatedButton.icon(
@@ -261,7 +268,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                           : StreamBuilder(
                         // Query to only show items for THIS driver's bus
                         stream: FirebaseDatabase.instance.ref().child('LostAndFound')
-                            .orderByChild('busNumber').equalTo(_driverBusNumber)
+                            .orderByChild('busNo').equalTo(_driverBusNumber)
                             .onValue,
                         builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -279,7 +286,8 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                           itemsList.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
 
                           return ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            // Added bottom: 120 padding here so the list clears the nav bar!
+                            padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
                             itemCount: itemsList.length,
                             itemBuilder: (context, index) {
                               final item = itemsList[index];
@@ -305,11 +313,11 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(item['route'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 14)),
-                                        Text(item['busNumber'] ?? '', style: const TextStyle(color: Colors.white54, fontSize: 14)),
+                                        Text(item['busNo'] ?? '', style: const TextStyle(color: Colors.white54, fontSize: 14)),
                                       ],
                                     ),
                                     const SizedBox(height: 15),
-                                    Text("${item['reporterName']} - ${item['contactNumber']}", style: const TextStyle(color: Colors.white, fontSize: 15)),
+                                    Text("${item['contactName']} - ${item['contactNumber']}", style: const TextStyle(color: Colors.white, fontSize: 15)),
                                   ],
                                 ),
                               );

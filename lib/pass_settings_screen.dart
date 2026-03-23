@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'pass_privacy_policy_screen.dart';
 import 'pass_help_screen.dart';
+import 'pass_dashboard.dart';
+import 'main.dart';
 
 
 class PassengerSettingsScreen extends StatefulWidget {
@@ -131,10 +133,24 @@ class _PassengerSettingsScreenState extends State<PassengerSettingsScreen> {
     );
   }
 
-  void _handleLogout(BuildContext context) async {
-    await FirebaseAuth.instance.signOut();
-    if (context.mounted) {
-      Navigator.popUntil(context, (route) => route.isFirst); // Returns to login
+  // UPDATED SECURE LOGOUT LOGIC
+  Future<void> _handleLogout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+
+      if (!context.mounted) return;
+
+      // FIX: Now routes all the way back to the GetStartedScreen!
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const GetStartedScreen()),
+            (route) => false,
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error logging out: $e"), backgroundColor: Colors.red),
+      );
     }
   }
 }

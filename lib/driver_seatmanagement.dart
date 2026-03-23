@@ -34,7 +34,6 @@ class _DriverSeatManagementScreenState extends State<DriverSeatManagementScreen>
             }
 
             // Default values
-            // Default values
             String name = "Unknown Student";
             String nic = "ID: $passengerUid";
 
@@ -86,6 +85,7 @@ class _DriverSeatManagementScreenState extends State<DriverSeatManagementScreen>
       ),
     );
   }
+
   Widget _buildSeatGrid(Map<dynamic, dynamic> bookedSeatsMap, Map<dynamic, dynamic> confirmedSeatsMap) {
     List<Widget> rows = [];
     for (int i = 0; i < 10; i++) {
@@ -145,24 +145,51 @@ class _DriverSeatManagementScreenState extends State<DriverSeatManagementScreen>
     );
   }
 
+  // --- REUSABLE GRADIENT HEADER ---
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0D4B3E), Colors.black26], // Matches app gradient
+        ),
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(25), bottomRight: Radius.circular(25)),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(Icons.arrow_back, color: Color(0xFF42C79A), size: 28),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Text(
+              widget.routeDisplay,
+              style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D4B3E),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent, elevation: 0,
-        title: Text(widget.routeDisplay, style: const TextStyle(color: Colors.white)),
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-      ),
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          color: Color(0xFF161B1B),
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
-        ),
+      backgroundColor: const Color(0xFF161B1B), // 🔴 MATCHES SETTINGS BACKGROUND
+      body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
+            // 🔴 NEW GRADIENT HEADER
+            _buildHeader(context),
+
             const SizedBox(height: 20),
+
             // Legend
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -176,9 +203,10 @@ class _DriverSeatManagementScreenState extends State<DriverSeatManagementScreen>
             ),
             const SizedBox(height: 30),
 
-            // Live Seat Map
+            // Live Seat Map (Removed the top-rounded container wrapper!)
             Expanded(
               child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 50),
                 child: StreamBuilder(
                   stream: FirebaseDatabase.instance.ref().child('Rides').child(widget.rideId).onValue,
                   builder: (context, snapshot) {

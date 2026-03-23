@@ -144,7 +144,7 @@ class _DriverSettingsScreenState extends State<DriverSettingsScreen> {
     // No change for Settings (index 2) as we are already on the settings screen
   }
 
-  // --- Header logic (common across settings sub-screens) ---
+  // --- Header logic ---
   Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -153,22 +153,18 @@ class _DriverSettingsScreenState extends State<DriverSettingsScreen> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0D4B3E), // Gradient top color
-            Colors.black26, // Gradient fading to black
-          ],
+          colors: [Color(0xFF0D4B3E), Colors.black26],
         ),
         borderRadius: BorderRadius.only(bottomLeft: Radius.circular(25), bottomRight: Radius.circular(25)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              const SizedBox(width: 10), // Just a little spacing instead of the arrow
-              const Text('Settings', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-            ],
+          GestureDetector(
+            onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const DriverDashboard())),
+            child: const Icon(Icons.arrow_back, color: Color(0xFF42C79A), size: 28),
           ),
+          const SizedBox(width: 15),
+          const Text('Settings', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
         ],
       ),
     );

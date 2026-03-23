@@ -172,7 +172,7 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
                               : Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: Colors.white24),
                             ),
@@ -239,7 +239,7 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
                             decoration: InputDecoration(
                               hintText: "Enter your review here...",
                               hintStyle: const TextStyle(color: Colors.white30),
-                              fillColor: Colors.white.withOpacity(0.05),
+                              fillColor: Colors.white.withValues(alpha: 0.05),
                               filled: true,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
