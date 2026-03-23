@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'pass_dashboard.dart';
 
 class PassengerProfileScreen extends StatefulWidget {
   const PassengerProfileScreen({super.key});
@@ -13,13 +14,10 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref().child('Users');
 
-  // Controllers for editable fields
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
-  // Read-only fields
   String _email = "";
-
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -36,7 +34,6 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
     super.dispose();
   }
 
-  // Fetch data from Firebase
   Future<void> _fetchPassengerData() async {
     final User? user = _auth.currentUser;
     if (user == null) return;
@@ -49,7 +46,6 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
         if (!mounted) return;
         setState(() {
           _fullNameController.text = data['fullName'] ?? '';
-          // Using 'phone' or 'contactNumber' depending on what you used during signup
           _phoneController.text = data['phone'] ?? data['contactNumber'] ?? '';
           _email = data['email'] ?? user.email ?? 'No email found';
           _isLoading = false;
@@ -65,7 +61,6 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
     }
   }
 
-  // Save changes to Firebase
   Future<void> _saveChanges() async {
     final User? user = _auth.currentUser;
     if (user == null) return;
@@ -91,15 +86,13 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF161B1B), // Dark theme background
+      backgroundColor: const Color(0xFF161B1B),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            // 1. Header Area
-            _buildHeader(),
+            _buildHeader(context),
 
-            // 2. Profile Content
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator(color: Color(0xFF42C79A)))
@@ -108,22 +101,20 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Avatar
                     Center(
                       child: Container(
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFF262E2E), // Dark card color
-                          border: Border.all(color: const Color(0xFF42C79A), width: 2), // Teal border
+                          color: const Color(0xFF262E2E),
+                          border: Border.all(color: const Color(0xFF42C79A), width: 2),
                         ),
                         child: const Icon(Icons.person, size: 60, color: Colors.white54),
                       ),
                     ),
                     const SizedBox(height: 40),
 
-                    // Editable Fields
                     _buildTextFieldLabel("Full Name"),
                     _buildTextField(controller: _fullNameController, hint: "Enter your full name"),
                     const SizedBox(height: 20),
@@ -132,11 +123,10 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
                     _buildTextField(controller: _phoneController, hint: "Enter your contact number", isNumber: true),
                     const SizedBox(height: 30),
 
-                    // Read-Only Section
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF262E2E), // Darker grey box
+                        color: const Color(0xFF262E2E),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Column(
@@ -151,21 +141,19 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
                             "Email: $_email",
                             style: const TextStyle(color: Colors.white, fontSize: 16),
                           ),
-                          // You can add NIC or Student ID here later if you collect them!
                         ],
                       ),
                     ),
                     const SizedBox(height: 40),
 
-                    // Save Button
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
                         onPressed: _isSaving ? null : _saveChanges,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF42C79A), // Teal button
-                          foregroundColor: const Color(0xFF161B1B), // Dark text
+                          backgroundColor: const Color(0xFF42C79A),
+                          foregroundColor: const Color(0xFF161B1B),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 0,
                         ),
@@ -177,7 +165,7 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 100), // Padding to prevent nav bar overlap
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -188,24 +176,27 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
     );
   }
 
-  // --- UI Helpers ---
-
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 20, left: 24, right: 24, bottom: 20),
+      padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF0D4B3E), Colors.black26], // Matches app gradient
+          colors: [Color(0xFF0D4B3E), Colors.black26],
         ),
         borderRadius: BorderRadius.only(bottomLeft: Radius.circular(25), bottomRight: Radius.circular(25)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          SizedBox(width: 10),
-          Text(
+          // Added back arrow mapping to Dashboard
+          GestureDetector(
+            onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PassengerDashboard())),
+            child: const Icon(Icons.arrow_back, color: Color(0xFF42C79A), size: 28),
+          ),
+          const SizedBox(width: 15),
+          const Text(
             'My Profile',
             style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
           ),
@@ -227,7 +218,7 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
   Widget _buildTextField({required TextEditingController controller, required String hint, bool isNumber = false}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF262E2E), // Dark input background
+        color: const Color(0xFF262E2E),
         borderRadius: BorderRadius.circular(10),
       ),
       child: TextField(
