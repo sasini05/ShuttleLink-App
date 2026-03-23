@@ -48,6 +48,7 @@ class _AlertScreenState extends State<AlertScreen> {
       debugPrint("Error fetching buses: $e");
     }
   }
+
   // 2. Time Picker
   Future<void> _pickTime() async {
     final TimeOfDay? picked = await showTimePicker(
@@ -72,44 +73,77 @@ class _AlertScreenState extends State<AlertScreen> {
     }
   }
 
-  // 4. Submit to Firebase
+  // 4. Submit to Firebase (With Universal Ticket Matcher)
   Future<void> _submitAlert() async {
-    // Validation checks
-    if (_selectedBus == null) {
-      _showError("Please select a bus number.");
-      return;
-    }
-    if (_selectedTime == null) {
-      _showError("Please select a time.");
-      return;
-    }
-    if (_selectedDate == null) {
-      _showError("Please select a date.");
-      return;
-    }
-    if (_alertType == null) {
-      _showError("Please select 'Delay' or 'Ride Cancelled'.");
-      return;
-    }
+    if (_selectedBus == null) { _showError("Please select a bus number."); return; }
+    if (_selectedTime == null) { _showError("Please select a time."); return; }
+    if (_selectedDate == null) { _showError("Please select a date."); return; }
+    if (_alertType == null) { _showError("Please select 'Delay' or 'Ride Cancelled'."); return; }
 
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Save to Firebase under a new 'Alerts' node
-        // We use .push() to generate a unique random ID for every alert
-        await FirebaseDatabase.instance.ref().child('Alerts').push().set({
+        final DatabaseReference dbRef = FirebaseDatabase.instance.ref();
+
+        // The Driver's standard date format
+        String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
+
+        // 🔴 FIX: Alternate Passenger Date Formats (Just in case the passenger app saves it differently!)
+        String altDate1 = "${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}";
+        String altDate2 = "${_selectedDate!.day.toString().padLeft(2, '0')}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.year}";
+
+        String formattedTime = _selectedTime!.format(context);
+
+        // 1. Save the Alert
+        await dbRef.child('Alerts').push().set({
           'driverId': user.uid,
           'busNumber': _selectedBus,
-          'date': "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}",
-          'time': _selectedTime!.format(context),
-          'reason': _reasonController.text.trim(), // Optional, so it's fine if it's empty
+          'date': formattedDate,
+          'time': formattedTime,
+          'reason': _reasonController.text.trim(),
           'alertType': _alertType,
-          'timestamp': ServerValue.timestamp, // Records exactly when the driver pressed submit
+          'timestamp': ServerValue.timestamp,
         });
+
+        if (_alertType == 'Cancelled') {
+          // 2. Safely Update Passenger Tickets (Universal Matcher)
+          final ticketsSnapshot = await dbRef.child('Tickets').get();
+          if (ticketsSnapshot.exists) {
+            final ticketsMap = ticketsSnapshot.value as Map<dynamic, dynamic>;
+
+            // Convert the selected bus to lowercase and trim spaces for a bulletproof match
+            String targetBus = _selectedBus!.toString().trim().toLowerCase();
+
+            ticketsMap.forEach((ticketId, ticketData) {
+              // Extract the bus and date from the passenger ticket
+              String tBus = (ticketData['busNo'] ?? ticketData['busNumber'] ?? '').toString().trim().toLowerCase();
+              String tDate = ticketData['date']?.toString().trim() ?? '';
+
+              // 🔴 FIX: If the bus matches, AND the date matches ANY of our formats, cancel it!
+              if (tBus == targetBus && (tDate == formattedDate || tDate == altDate1 || tDate == altDate2)) {
+                dbRef.child('Tickets').child(ticketId).update({'status': 'Cancelled'});
+              }
+            });
+          }
+
+          // 3. Update the Rides node
+          final ridesSnapshot = await dbRef.child('Rides').get();
+          if (ridesSnapshot.exists) {
+            final ridesMap = ridesSnapshot.value as Map<dynamic, dynamic>;
+            ridesMap.forEach((rideId, rideData) {
+              if (rideData['busNumber'] == _selectedBus && rideData['date'] == formattedDate) {
+                dbRef.child('Rides').child(rideId).update({'status': 'Cancelled'});
+              }
+            });
+          }
+        }
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Alert sent to passengers successfully!"), backgroundColor: Color(0xFF42C79A)),
+          SnackBar(
+              content: Text(_alertType == 'Cancelled' ? "Ride cancelled!" : "Alert sent!"),
+              backgroundColor: const Color(0xFF42C79A)
+          ),
         );
         Navigator.pop(context);
       }

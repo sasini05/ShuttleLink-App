@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'driver_seatmanagement.dart';
-
+import 'driver_dashboard.dart';
 
 class TicketCheckerScreen extends StatelessWidget {
   const TicketCheckerScreen({super.key});
@@ -11,70 +11,64 @@ class TicketCheckerScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final String myUid = FirebaseAuth.instance.currentUser?.uid ?? "";
     final Query myRidesQuery = FirebaseDatabase.instance.ref().child('Rides').orderByChild('driverId').equalTo(myUid);
-
+// new updates branch-sasini05
     return Scaffold(
-      backgroundColor: const Color(0xFF0D4B3E),
+      backgroundColor: const Color(0xFF161B1B), // MATCHES SETTINGS BACKGROUND
       body: SafeArea(
         bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text("Manage Rides", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
-            ),
+
+            // NEW GRADIENT HEADER MATCHING SETTINGS/PROFILE
+            _buildHeader(context),
+
             Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF161B1B),
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
-                ),
-                child: StreamBuilder(
-                  stream: myRidesQuery.onValue,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: Color(0xFF42C79A)));
-                    }
-                    if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
-                      return const Center(child: Text("No rides scheduled.", style: TextStyle(color: Colors.white70)));
-                    }
+              // REMOVED THE TOP-ROUNDED CONTAINER SO IT FLOWS SEAMLESSLY
+              child: StreamBuilder(
+                stream: myRidesQuery.onValue,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: Color(0xFF42C79A)));
+                  }
+                  if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+                    return const Center(child: Text("No rides scheduled.", style: TextStyle(color: Colors.white70)));
+                  }
 
-                    final ridesMap = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
-                    List<Map<String, dynamic>> myRides = [];
-                    DateTime now = DateTime.now();
+                  final ridesMap = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+                  List<Map<String, dynamic>> myRides = [];
+                  DateTime now = DateTime.now();
 
-                    ridesMap.forEach((key, value) {
-                      final ride = Map<String, dynamic>.from(value as Map);
-                      ride['rideId'] = key;
+                  ridesMap.forEach((key, value) {
+                    final ride = Map<String, dynamic>.from(value as Map);
+                    ride['rideId'] = key;
 
-                      // Handle "End Trip" 24-hour deletion logic
-                      if (ride['status'] == 'Ended') {
-                        if (ride['endedAt'] != null) {
-                          DateTime endedTime = DateTime.fromMillisecondsSinceEpoch(ride['endedAt']);
-                          if (now.difference(endedTime).inHours > 24) {
-                            return; // Skip displaying this ride if it ended over 24 hours ago
-                          }
+                    // Handle "End Trip" 24-hour deletion logic
+                    if (ride['status'] == 'Ended') {
+                      if (ride['endedAt'] != null) {
+                        DateTime endedTime = DateTime.fromMillisecondsSinceEpoch(ride['endedAt']);
+                        if (now.difference(endedTime).inHours > 24) {
+                          return; // Skip displaying this ride if it ended over 24 hours ago
                         }
                       }
-                      myRides.add(ride);
-                    });
-
-                    myRides.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
-
-                    if (myRides.isEmpty) {
-                      return const Center(child: Text("No active rides available.", style: TextStyle(color: Colors.white70)));
                     }
+                    myRides.add(ride);
+                  });
 
-                    return ListView.builder(
-                      padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 120),
-                      itemCount: myRides.length,
-                      itemBuilder: (context, index) {
-                        return _buildRideBox(myRides[index], context);
-                      },
-                    );
-                  },
-                ),
+                  myRides.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
+
+                  if (myRides.isEmpty) {
+                    return const Center(child: Text("No active rides available.", style: TextStyle(color: Colors.white70)));
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 120),
+                    itemCount: myRides.length,
+                    itemBuilder: (context, index) {
+                      return _buildRideBox(myRides[index], context);
+                    },
+                  );
+                },
               ),
             ),
           ],
@@ -83,6 +77,36 @@ class TicketCheckerScreen extends StatelessWidget {
     );
   }
 
+  // --- REUSABLE GRADIENT HEADER ---
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0D4B3E), Colors.black26],
+        ),
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(25), bottomRight: Radius.circular(25)),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const DriverDashboard())),
+            child: const Icon(Icons.arrow_back, color: Color(0xFF42C79A), size: 28),
+          ),
+          const SizedBox(width: 15),
+          const Text(
+            'Manage Rides',
+            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- CARD WIDGET ---
   Widget _buildRideBox(Map<String, dynamic> ride, BuildContext context) {
     bool isEnded = ride['status'] == 'Ended';
 
@@ -90,9 +114,9 @@ class TicketCheckerScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF262E2E),
+        color: const Color(0xFF262E2E), // Match dark grey cards
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: isEnded ? Colors.grey : Colors.transparent),
+        border: Border.all(color: isEnded ? Colors.grey : Colors.white12), // Subtle border to match settings cards
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,8 +138,12 @@ class TicketCheckerScreen extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => DriverSeatManagementScreen(rideId: ride['rideId'], routeDisplay: ride['route'] ?? "Unknown")),
                     );
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF42C79A), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                  child: const Text("View Seats", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF42C79A),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  child: const Text("View Seats", style: TextStyle(color: Color(0xFF161B1B), fontWeight: FontWeight.bold)), // Dark text on light green
                 ),
               ),
               const SizedBox(width: 10),
@@ -123,7 +151,12 @@ class TicketCheckerScreen extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: isEnded ? null : () => _endTrip(ride['rideId'], context),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent.withValues(alpha: 0.2), // Faded red to match aesthetic
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                    side: const BorderSide(color: Colors.redAccent), // Red border outline
+                  ),
                   child: Text(isEnded ? "Trip Ended" : "End Trip", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
@@ -134,6 +167,7 @@ class TicketCheckerScreen extends StatelessWidget {
     );
   }
 
+  // --- END TRIP LOGIC ---
   Future<void> _endTrip(String rideId, BuildContext context) async {
     showDialog(
       context: context,

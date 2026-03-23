@@ -70,11 +70,26 @@ class PassengerTicketScreen extends StatelessWidget {
 
                             // Only keep tickets that are LESS than 7 days old
                             if (now.difference(rideDate).inDays <= 7) {
-                              // Determine Status (Booked = Green, Confirmed = Red)
-                              // Assuming the driver will update rideData['status'] to 'Confirmed'
+
+                              // FIX: Check the master ride status for cancellations!
+                              String masterStatus = (rideData['status'] ?? "").toString().toLowerCase();
+                              bool isCancelled = masterStatus == 'cancelled' || masterStatus == 'canceled';
+
                               bool isConfirmed = false;
                               if (rideData['confirmed_seats'] != null) {
                                 isConfirmed = (rideData['confirmed_seats'] as Map).containsKey(seatNum);
+                              }
+
+                              // Determine display text and colors based on status priority
+                              String displayStatus = "Booked";
+                              Color displayColor = const Color(0xFF43C59E); // Default Mint Green
+
+                              if (isCancelled) {
+                                displayStatus = "Cancelled";
+                                displayColor = Colors.redAccent; // Red for cancelled
+                              } else if (isConfirmed) {
+                                displayStatus = "Confirmed";
+                                displayColor = Colors.blueAccent; // Blue for successfully boarded
                               }
 
                               myTickets.add({
@@ -83,8 +98,8 @@ class PassengerTicketScreen extends StatelessWidget {
                                 'date': dateStr,
                                 'time': rideData['time'] ?? rideData['startTime'] ?? "TBD",
                                 'bus': rideData['busNumber'] ?? "Unknown",
-                                'status': isConfirmed ? "Confirmed" : "Booked",
-                                'statusColor': isConfirmed ? Colors.redAccent : const Color(0xFF43C59E),
+                                'status': displayStatus,
+                                'statusColor': displayColor,
                                 'sortDate': rideDate,
                               });
                             }
@@ -153,7 +168,7 @@ class PassengerTicketScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: ticket['statusColor'].withValues(alpha: 0.2),
+                      color: ticket['statusColor'].withOpacity(0.2), // Uses withOpacity for better cross-version support
                       borderRadius: BorderRadius.circular(5),
                       border: Border.all(color: ticket['statusColor']),
                     ),

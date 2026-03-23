@@ -38,6 +38,7 @@ dependencies:
   firebase_auth: ^6.2.0
   firebase_database: ^12.1.4
   intl: 0.20.2
+  flutter_rating_bar: ^4.0.1
 
 dev_dependencies:
   flutter_test:
@@ -97,7 +98,7 @@ flutter:
     - assets/bus_logo.png
     - assets/dashboard_bus_logo.png
     - assets/wheel.png
-    - assets/income.jpg
+    - assets/income.png
     - assets/lost&found.png
     - assets/alert.png
     - assets/bus_reg.png

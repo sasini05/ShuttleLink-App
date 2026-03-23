@@ -294,9 +294,55 @@ class _DriverSignUpScreenState extends State<DriverSignUpScreen> {
   }
 }
 
+
 //Screen 4: Forgot Password
-class DriverForgotPasswordScreen extends StatelessWidget {
+//Updated by -sasini05/ new updates branch
+class DriverForgotPasswordScreen extends StatefulWidget {
   const DriverForgotPasswordScreen({super.key});
+
+  @override
+  State<DriverForgotPasswordScreen> createState() => _DriverForgotPasswordScreenState();
+}
+
+class _DriverForgotPasswordScreenState extends State<DriverForgotPasswordScreen> {
+  final _emailController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter your email address."), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Trigger Firebase to send the secure password reset email
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Password reset email sent! Check your inbox."),
+              backgroundColor: Color(0xFF42C79A)
+          ),
+        );
+        Navigator.pop(context); // Send them back to the login screen
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -311,26 +357,30 @@ class DriverForgotPasswordScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   const Text('Forget password?', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
                   const SizedBox(height: 20),
-                  const Icon(Icons.lock_reset, size: 100, color: Color(0xFF42C79A)), // Placeholder for your lock logo
+                  const Icon(Icons.lock_reset, size: 100, color: Color(0xFF42C79A)),
                   const SizedBox(height: 10),
                   const Text(
-                    "Provide your account's\nemail & NIC for when you want\nto reset your password",
+                    "Provide your account's email\nand we will send you a secure link\nto reset your password.",
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white70),
                   ),
+                  const SizedBox(height: 40),
+
+                  // Just the Email Field
+                  CustomTextField(
+                    label: 'Email :',
+                    hint: 'shuttlelink@gmail.com',
+                    controller: _emailController,
+                  ),
+
                   const SizedBox(height: 30),
 
-                  const CustomTextField(label: 'Email :', hint: 'shuttlelink@gmail.com'),
-                  const CustomTextField(label: 'NIC :', hint: '123456789'),
-                  const CustomTextField(label: 'Password :', hint: '****************', isPassword: true),
-                  const CustomTextField(label: 'New Password :', hint: '****************', isPassword: true),
-
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Custom Password Update Logic goes here
-                    },
-                    child: const Text('UPDATE'),
+                  // Update Button
+                  _isLoading
+                      ? const CircularProgressIndicator(color: Color(0xFF42C79A))
+                      : ElevatedButton(
+                    onPressed: _resetPassword,
+                    child: const Text('SEND RESET LINK', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),

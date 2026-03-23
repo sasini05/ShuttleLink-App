@@ -171,7 +171,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
                           _buildCategoryCard('Create Ride', 'assets/wheel.png', onTap: () {
                             Navigator.push(innerContext, MaterialPageRoute(builder: (context) => const CreateRideScreen()));
                           }),
-                          _buildCategoryCard('Income', 'assets/income.jpg', onTap: () {
+                          _buildCategoryCard('Income', 'assets/income.png', onTap: () {
                             Navigator.push(innerContext, MaterialPageRoute(builder: (context) => const IncomeScreen()));
                           }),
                           _buildCategoryCard('Alert Box', 'assets/alert.png', onTap: () {

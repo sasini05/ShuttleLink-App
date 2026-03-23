@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // Make sure you added this to pubspec.yaml earlier!
-import '../models/lost_found_item.dart'; // Import your new model
-import 'pass_report_lostitem.dart'; // To navigate to the report form
+import 'package:intl/intl.dart';
+import '../models/lost_found_item.dart';
+import 'pass_report_lostitem.dart';
 
 class LostFoundScreen extends StatefulWidget {
   const LostFoundScreen({super.key});
@@ -23,13 +23,12 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
     _fetchAndFilterItems(); // Get targeted reports on screen load
   }
 
-  /// The magic trick! This function fetches all reports, but then immediately gets
+  ///  This function fetches all reports, but then immediately gets
   /// the passenger's ride history to filter the reports so they only see
   /// the ones that are relevant to them (same route, date, bus).
   void _fetchAndFilterItems() async {
     List<LostFoundItemModel> allItems = [];
     List<Map<String, String>> passengerRides = [];
-
 
     final int currentTime = DateTime.now().millisecondsSinceEpoch;
     final int sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000;
@@ -42,18 +41,16 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
       itemsMap.forEach((key, value) {
         final item = LostFoundItemModel.fromMap(key, value);
 
-
         if (currentTime - item.timestamp > sevenDaysInMillis) {
-
           _dbRef.child('LostAndFound').child(key).remove();
         } else {
-          // It's still valid, keep it in the list
+
           allItems.add(item);
         }
       });
     }
 
-    // 2. Get the ride history (Unchanged)
+    // 2. Get the ride history
     final ridesSnapshot = await _dbRef.child('Rides').get();
     if (ridesSnapshot.exists) {
       final ridesMap = ridesSnapshot.value as Map<dynamic, dynamic>;
@@ -68,7 +65,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
       });
     }
 
-    // 3. Filter the results (Unchanged)
+    // 3. Filter the results
     List<LostFoundItemModel> targetedItems = allItems.where((item) {
       return passengerRides.any((ride) =>
       ride['route'] == item.route &&
@@ -128,11 +125,11 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                     ? const Center(child: Text("No relevant lost or found reports.", style: TextStyle(color: Colors.white60)))
                     : ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0, bottom: 120.0), // Added bottom padding to the list too so the last item isn't covered
                   itemCount: _filteredItems.length,
                   itemBuilder: (context, index) {
                     final item = _filteredItems[index];
-                    // Format date nicely from dd/mm/yyyy to 'dd MMM yyyy'
+
                     String formattedDate = '';
                     try {
                       DateTime dateObj = DateFormat("dd/MM/yyyy").parse(item.date);
@@ -143,7 +140,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
 
                     // Return the stylized Card
                     return Card(
-                      color: Colors.black.withOpacity(0.3), // Dark card for dark theme
+                      color: Colors.black.withValues(alpha: 0.3), // Dark card for dark theme
                       margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                       child: Padding(
@@ -187,7 +184,7 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
                             // Divider line
                             const Divider(color: Colors.white24, height: 20),
 
-                            // 🟢 NEW: "Contact me:" and reporter details section
+                            // "Contact me:" and reporter details section
                             Text("Contact me:", style: cardValueStyle),
                             const SizedBox(height: 4),
                             Text("${item.contactName} - ${item.contactNumber}", style: contactStyle),
@@ -203,15 +200,19 @@ class _LostFoundScreenState extends State<LostFoundScreen> {
         ),
       ),
 
-      // 🔵 NEW: Add Report Button (styled for the project)
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to the form, and refresh the list when they return
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportItemScreen()))
-              .then((value) => _fetchAndFilterItems());
-        },
-        backgroundColor: Colors.greenAccent, // Make it pop
-        child: const Icon(Icons.add, color: Color(0xFF14453D)), // Deep green icon
+      //  Positioned explicitly and pushed up with Padding
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 90.0), // Lifts it right above the nav bar
+        child: FloatingActionButton(
+          onPressed: () {
+            // Navigate to the form, and refresh the list when they return
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportItemScreen()))
+                .then((value) => _fetchAndFilterItems());
+          },
+          backgroundColor: Colors.greenAccent,
+          child: const Icon(Icons.add, color: Color(0xFF14453D)),
+        ),
       ),
     );
   }

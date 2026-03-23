@@ -1,3 +1,4 @@
+import 'driver_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -34,7 +35,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     if (user == null) return;
 
     try {
-      final snapshot = await FirebaseDatabase.instance.ref().child('Users').child(user.uid).get();
+      final snapshot = await FirebaseDatabase.instance
+          .ref()
+          .child('Users')
+          .child(user.uid)
+          .get();
       if (snapshot.exists && mounted) {
         final data = snapshot.value as Map;
         setState(() {
@@ -62,10 +67,15 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Saving changes...")));
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Saving changes...")));
 
     try {
-      await FirebaseDatabase.instance.ref().child('Users').child(user.uid).update({
+      await FirebaseDatabase.instance
+          .ref()
+          .child('Users')
+          .child(user.uid)
+          .update({
         'fullName': _nameController.text.trim(),
         'contact': _phoneController.text.trim(),
         'license': _licenseController.text.trim(),
@@ -73,11 +83,15 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile updated successfully!"), backgroundColor: Color(0xFF42C79A)),
+          const SnackBar(content: Text("Profile updated successfully!"),
+              backgroundColor: Color(0xFF42C79A)),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error saving profile: $e"), backgroundColor: Colors.red));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Error saving profile: $e"),
+          backgroundColor: Colors.red));
     }
   }
 
@@ -95,9 +109,11 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             // Profile Form
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF42C79A)))
+                  ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF42C79A)))
                   : SingleChildScrollView(
-                padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 120),
+                padding: const EdgeInsets.only(
+                    left: 24, right: 24, top: 24, bottom: 120),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -108,16 +124,19 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF262E2E),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF42C79A), width: 3),
+                        border: Border.all(color: const Color(0xFF42C79A),
+                            width: 3),
                       ),
-                      child: const Icon(Icons.person, size: 60, color: Colors.white54),
+                      child: const Icon(
+                          Icons.person, size: 60, color: Colors.white54),
                     ),
                     const SizedBox(height: 30),
 
                     // Editable Fields
                     _buildTextField("Full Name", _nameController),
                     const SizedBox(height: 15),
-                    _buildTextField("Contact Number", _phoneController, isPhone: true),
+                    _buildTextField(
+                        "Contact Number", _phoneController, isPhone: true),
                     const SizedBox(height: 15),
                     _buildTextField("License Number", _licenseController),
                     const SizedBox(height: 25),
@@ -134,13 +153,20 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text("Account Details (Read-Only)", style: TextStyle(color: Colors.white54, fontSize: 12)),
+                          const Text(
+                              "Account Details (Read-Only)", style: TextStyle(
+                              color: Colors.white54, fontSize: 12)),
                           const SizedBox(height: 15),
-                          Text("Route: $_route", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text("Route: $_route", style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text("Email: $_email", style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                          Text("Email: $_email", style: const TextStyle(
+                              color: Colors.white70, fontSize: 16)),
                           const SizedBox(height: 8),
-                          Text("NIC: $_nic", style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                          Text("NIC: $_nic", style: const TextStyle(
+                              color: Colors.white70, fontSize: 16)),
                         ],
                       ),
                     ),
@@ -154,9 +180,13 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF42C79A),
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15)),
                         ),
-                        child: const Text('Save Changes', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: const Text('Save Changes', style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],
@@ -170,11 +200,13 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   }
 
   // Standardized Text Field Widget
-  Widget _buildTextField(String label, TextEditingController controller, {bool isPhone = false}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {bool isPhone = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(
+            color: Colors.white70, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
@@ -183,8 +215,10 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           decoration: InputDecoration(
             filled: true,
             fillColor: const Color(0xFF262E2E),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none),
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 14),
           ),
         ),
       ],
@@ -202,12 +236,21 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           end: Alignment.bottomCenter,
           colors: [Color(0xFF0D4B3E), Colors.black26],
         ),
-        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(25), bottomRight: Radius.circular(25)),
+        borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(25), bottomRight: Radius.circular(25)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          SizedBox(width: 10),
-          Text('My Profile', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+          GestureDetector(
+            onTap: () =>
+                Navigator.pushReplacement(context, MaterialPageRoute(
+                    builder: (context) => const DriverDashboard())),
+            child: const Icon(
+                Icons.arrow_back, color: Color(0xFF42C79A), size: 28),
+          ),
+          const SizedBox(width: 15),
+          const Text('My Profile', style: TextStyle(
+              color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
         ],
       ),
     );
